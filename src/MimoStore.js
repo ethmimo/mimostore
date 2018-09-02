@@ -14,20 +14,20 @@ class MimoStore extends EventStore {
     else super.add(data);
   }
 
+  didOwnerSign(data, sig) {
+    return this.recover(data, sig) == this.owner;
+  }
+
+  recover(data, sig) {
+    EthCrypto.recover(sig, EthCrypto.hash.keccak256(JSON.stringify(data)));
+  }
+
   get ensname() {
     return this.dbname;
   }
 
   get owner() {
     return this.owner
-  }
-
-  get didOwnerSign(data, sig) {
-    return this.recover(data, sig) == this.owner;
-  }
-
-  recover(data, sig) {
-    EthCrypto.recover(sig, EthCrypto.hash.keccak256(JSON.stringify(data)));
   }
 
   static get type() {

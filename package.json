@@ -1,0 +1,31 @@
+{
+  "name": "ethmimo-orbit",
+  "version": "1.0.0",
+  "description": "Custom identity store for Mimo on OrbitDB",
+  "main": "src/MimoStore.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ethmimo/mimo-orbit.git"
+  },
+  "keywords": [
+    "identity",
+    "web3",
+    "p2p",
+    "peer-to-peer",
+    "decentralized",
+    "database"
+  ],
+  "author": "Ghilia Weldesselasie",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ethmimo/mimo-orbit/issues"
+  },
+  "homepage": "https://github.com/ethmimo/mimo-orbit#readme",
+  "dependencies": {
+    "eth-crypto": "^1.2.3",
+    "orbit-db-eventstore": "^1.4.0"
+  }
+}

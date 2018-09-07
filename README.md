@@ -12,7 +12,7 @@ An append-only log with traversable history. Add new claims about your identity 
 
 ## Install
 ```
-npm install mimo-orbit
+npm install ethmimo-orbit
 ```
 
 ## Usage

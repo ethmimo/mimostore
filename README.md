@@ -23,17 +23,17 @@ First, create an instance of OrbitDB and Web3:
 const IPFS = require('ipfs')
 const OrbitDB = require('orbit-db')
 const Web3 = require('web3')
-const MimoStore = require('mimo-orbit')
+const MimoStore = require('ethmimo-orbit')
 
 const ipfs = new IPFS()
 const web3 = new Web3()
 
-// add custom type to orbitdb
+// add MimoStore to orbitdb
 OrbitDB.addDatabaseType(MimoStore.type, MimoStore)
 
-// instantiate custom store
+// instantiate MimoStore
 const orbitdb = new OrbitDB(ipfs)
-const store = orbitdb.create(ensname, web3.eth.ens.registrar.owner(ensname), CustomStore.type)
+const store = orbitdb.create(ensname, web3.eth.ens.registrar.owner(ensname), MimoStore.type)
 ```
 
 Add a claim to it, if the signature of the data is a valid one then the data will be added successfully:

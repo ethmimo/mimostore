@@ -1,5 +1,6 @@
 const EventStore = require('orbit-db-eventstore');
 const EthCrypto = require('eth-crypto');
+const Web3 = require('web3');
 
 class MimoStore extends EventStore {
 
@@ -7,15 +8,15 @@ class MimoStore extends EventStore {
    * Instantiates a MimoStore
    *
    * @param     {IPFS}      ipfs        An IPFS instance
-   * @param     {String}    dbname      The name of your database (should be the same as your ENS name)
-   * @param     {String}    dbowner     The Ethereum account that owns this DB
+   * @param     {String}    dbname      The DB name, should be same as ENS name
    * @return    {MimoStore}             self
    */
-  constructor(ipfs, id, dbname, dbowner, options) {
+  constructor(ipfs, id, dbname, options) {
     if(!options) options = {};
+    this.type = MimoStore.type;
+    this.ens = options.web3.eth.ens;
+    delete options.web3;
     super(ipfs, id, dbname, options);
-    this._type = MimoStore.type;
-    this.owner = dbowner;
   }
 
   /**
@@ -25,6 +26,7 @@ class MimoStore extends EventStore {
    * @param     {String}    sig          A valid signature of the data by the owner
    */
   add(data, sig) {
+    if (!sig) throw new Error('A signature must be included');
     if (!didOwnerSign(data, sig)) throw new Error('Owner did not authorize this');
     super.add(data);
   }
@@ -37,7 +39,7 @@ class MimoStore extends EventStore {
    * @returns   {Boolean}                Was the data signed by the owner?
    */
   didOwnerSign(data, sig) {
-    return this.recover(data, sig) == this.owner;
+    return this.recover(data, sig) == this.owner; // TODO: Is this how to call owner?
   }
 
   /**
@@ -66,7 +68,7 @@ class MimoStore extends EventStore {
    * @returns   {String}                 The owner of the ENS name and DB (an Ethereum address)
    */
   get owner() {
-    return this.owner;
+    return this.ens.registrar.owner(this.dbname);
   }
 
   /**

@@ -7,15 +7,15 @@ class MimoStore extends EventStore {
   /**
    * Instantiates a MimoStore
    *
-   * @param     {IPFS}      ipfs        An IPFS instance
-   * @param     {String}    dbname      The DB name, should be same as ENS name
-   * @return    {MimoStore}             self
+   * @param     {IPFS}      ipfs            An IPFS instance
+   * @param     {String}    dbname          The DB name, should be same as ENS name
+   * @param     {Web3}      options.web3    A Web3 provider instance
+   * @return    {MimoStore}                 self
    */
   constructor(ipfs, id, dbname, options) {
     if(!options) options = {};
     this.type = MimoStore.type;
-    this.ens = options.web3.eth.ens;
-    delete options.web3;
+    if (options.web3 instanceof Web3) this.ens = options.web3.eth.ens;
     super(ipfs, id, dbname, options);
   }
 
@@ -68,7 +68,7 @@ class MimoStore extends EventStore {
    * @returns   {String}                 The owner of the ENS name and DB (an Ethereum address)
    */
   get owner() {
-    return this.ens.registrar.owner(this.dbname);
+    return this.ens.registry.owner(this.dbname);
   }
 
   /**

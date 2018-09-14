@@ -33,7 +33,10 @@ OrbitDB.addDatabaseType(MimoStore.type, MimoStore)
 
 // instantiate MimoStore
 const orbitdb = new OrbitDB(ipfs)
-const store = orbitdb.create(ensname, web3.eth.ens.registrar.owner(ensname), MimoStore.type)
+const store = orbitdb.create(ensname, MimoStore.type, {
+  web3: this.web3,
+  write: [*]
+});
 ```
 
 Add a claim to it, if the signature of the data is a valid one then the data will be added successfully:

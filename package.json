@@ -26,7 +26,7 @@
   "homepage": "https://github.com/ethmimo/mimo-orbit#readme",
   "dependencies": {
     "eth-crypto": "^1.2.3",
-    "orbit-db-eventstore": "^1.4.0",
+    "orbit-db-docstore": "^1.4.3",
     "web3": "^1.0.0-beta.36"
   }
 }

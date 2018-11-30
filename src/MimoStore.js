@@ -1,45 +1,58 @@
-const EventStore = require('orbit-db-eventstore');
+const DocumentStore = require('orbit-db-docstore');
 const EthCrypto = require('eth-crypto');
-const Web3 = require('web3');
 
-class MimoStore extends EventStore {
+class MimoStore extends DocumentStore {
 
   /**
    * Instantiates a MimoStore
    *
    * @param     {IPFS}      ipfs            An IPFS instance
-   * @param     {String}    dbname          The DB name, should be same as ENS name
-   * @param     {Web3}      options.web3    A Web3 provider instance
+   * @param     {String}    dbname          The DB name, should be 'mimo'
    * @return    {MimoStore}                 self
    */
   constructor(ipfs, id, dbname, options) {
-    if(!options) options = {};
-    this.type = MimoStore.type;
-    if (options.web3 instanceof Web3) this.ens = options.web3.eth.ens;
     super(ipfs, id, dbname, options);
+    this.type = MimoStore.type;
   }
 
-  /**
-   * Add data to the DB
+  put (data) {
+    throw new Error('put cannot be called directly');
+  }
+
+  /*** Add data to a profile
    *
-   * @param     {Object}    data         The data we want to add
-   * @param     {String}    sig          A valid signature of the data by the owner
+   * @param     {String}    name         The name of the profile we want to register
+   * @param     {String}    owner        The owner (address) of the profile
    */
   add(data, sig) {
     if (!sig) throw new Error('A signature must be included');
-    if (!didOwnerSign(data, sig)) throw new Error('Owner did not authorize this');
-    super.add(data);
+    const signer = recover(data, sig);
+    data._id = getID(data.name, signer);
+    delete data.registered_on;
+    super.put(data);
   }
 
   /**
-   * Checks if data has been signed by the owner
+   * Register a profile
+   *
+   * @param     {String}    name         The name of the profile we want to register
+   * @param     {String}    owner        The owner (address) of the profile
+   */
+  register(name, owner) {
+    if (!(name instanceof String)) throw new Error('Name must be a string');
+    if (!(owner instanceof String)) throw new Error('Owner must be a string');
+    super.put({ _id: EthCrypto.hash.keccak256([name, owner]), name: name, registered_on: Date.now() });
+  }
+
+  /**
+   * Get a profile's ID
    *
    * @param     {Object}    data         The data we signed
    * @param     {String}    sig          A signature of the data
    * @returns   {Boolean}                Was the data signed by the owner?
    */
-  didOwnerSign(data, sig) {
-    return this.recover(data, sig) == this.owner; // TODO: Is this how to call owner?
+  getID(name, owner) {
+    return EthCrypto.hash.keccak256([name, owner]);
   }
 
   /**
@@ -54,21 +67,17 @@ class MimoStore extends EventStore {
   }
 
   /**
-   * Get the name of the database
+   * Get true owner
    *
-   * @returns   {String}                 The name of the database, same as ENS name
+   * @returns   {Object}                 The profile that is the true owner of a name
    */
-  get ensname() {
-    return this.dbname;
-  }
-
-  /**
-   * Get the owner of the database
-   *
-   * @returns   {String}                 The owner of the ENS name and DB (an Ethereum address)
-   */
-  get owner() {
-    return this.ens.registry.owner(this.dbname);
+  trueOwner(name) {
+    // get all profiles with the name we're looking for
+    const names = this.query((p)=> p.name == name));
+    // get the earliest date that a profile with this name was registered on
+    const earliestDate = Math.min(names.map(name => name.registered_on));
+    // return that profile
+    return this.query((p)=> p.registered_on == earliestDate));
   }
 
   /**

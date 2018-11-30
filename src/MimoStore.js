@@ -25,8 +25,10 @@ class MimoStore extends DocumentStore {
    * @param     {String}    owner        The owner (address) of the profile
    */
   add(data, sig) {
+    if (!data) throw new Error('Data must be included');
     if (!sig) throw new Error('A signature must be included');
     const signer = recover(data, sig);
+    if (!isRegistered(data.name, signer)) throw new Error('Profile must be registered');
     data._id = getID(data.name, signer);
     delete data.registered_on;
     super.put(data);
@@ -42,6 +44,19 @@ class MimoStore extends DocumentStore {
     if (!(name instanceof String)) throw new Error('Name must be a string');
     if (!(owner instanceof String)) throw new Error('Owner must be a string');
     super.put({ _id: EthCrypto.hash.keccak256([name, owner]), name: name, registered_on: Date.now() });
+  }
+
+  /**
+   * Check if a profile is registered
+   *
+   * @param     {Object}    data         The data we signed
+   * @param     {String}    sig          A signature of the data
+   * @returns   {Boolean}                Was the data signed by the owner?
+   */
+  isRegistered(name, owner) {
+    const id = getID(name, owner);
+    const profile = this.get(id);
+    return profile != undefined;
   }
 
   /**

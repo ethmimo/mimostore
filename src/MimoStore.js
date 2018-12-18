@@ -1,7 +1,7 @@
-const DocumentStore = require('orbit-db-docstore');
+const KeyValueStore = require('orbit-db-kvstore');
 const EthCrypto = require('eth-crypto');
 
-class MimoStore extends DocumentStore {
+class MimoStore extends KeyValueStore {
 
   /**
    * Instantiates a MimoStore
@@ -15,35 +15,29 @@ class MimoStore extends DocumentStore {
     this.type = MimoStore.type;
   }
 
-  put (data) {
-    throw new Error('put cannot be called directly');
+  set (data, sig) {
+    throw new Error('set cannot be called directly');
   }
 
   /*** Add data to a profile
    *
-   * @param     {String}    name         The name of the profile we want to register
-   * @param     {String}    owner        The owner (address) of the profile
+   * @param     {Object}    data       The new data to be added to the profile
+   * @param     {String}    sig        A signature of the data
    */
-  add(data, sig) {
+  put(data, sig) {
     if (!data) throw new Error('Data must be included');
     if (!sig) throw new Error('A signature must be included');
     const signer = recover(data, sig);
-    if (!isRegistered(data.name, signer)) throw new Error('Profile must be registered');
-    data._id = getID(data.name, signer);
-    delete data.registered_on;
-    super.put(data);
+    data.id = getID(data.name, signer);
+    const profile = this.get(data.id);
+    Object.assign(profile, data);
+    super.put(data.id, profile);
   }
 
-  /**
-   * Register a profile
-   *
-   * @param     {String}    name         The name of the profile we want to register
-   * @param     {String}    owner        The owner (address) of the profile
-   */
-  register(name, owner) {
-    if (!(name instanceof String)) throw new Error('Name must be a string');
-    if (!(owner instanceof String)) throw new Error('Owner must be a string');
-    super.put({ _id: EthCrypto.hash.keccak256([name, owner]), name: name, registered_on: Date.now() });
+  del(name, sig) {
+    const signer = recover('delete profile: ${name}', sig);
+    const id = getID(name, signer);
+    super.del(id);
   }
 
   /**
@@ -62,12 +56,12 @@ class MimoStore extends DocumentStore {
   /**
    * Get a profile's ID
    *
-   * @param     {Object}    data         The data we signed
-   * @param     {String}    sig          A signature of the data
-   * @returns   {Boolean}                Was the data signed by the owner?
+   * @param     {String}    name         The name of the profile
+   * @param     {String}    owner        A public key
+   * @returns   {String}                 The profile ID
    */
   getID(name, owner) {
-    return EthCrypto.hash.keccak256([name, owner]);
+    return EthCrypto.hash.keccak256(name + owner);
   }
 
   /**
@@ -78,21 +72,12 @@ class MimoStore extends DocumentStore {
    * @returns   {String}                 The Ethereum address that signed the data
    */
   recover(data, sig) {
-    EthCrypto.recover(sig, EthCrypto.hash.keccak256(JSON.stringify(data)));
-  }
+    if (data instanceof String) {
+      EthCrypto.recover(sig, EthCrypto.hash.keccak256(data));
+    } else {
+      EthCrypto.recover(sig, EthCrypto.hash.keccak256(JSON.stringify(data)));
+    }
 
-  /**
-   * Get true owner
-   *
-   * @returns   {Object}                 The profile that is the true owner of a name
-   */
-  trueOwner(name) {
-    // get all profiles with the name we're looking for
-    const names = this.query((p)=> p.name == name));
-    // get the earliest date that a profile with this name was registered on
-    const earliestDate = Math.min(names.map(name => name.registered_on));
-    // return that profile
-    return this.query((p)=> p.registered_on == earliestDate));
   }
 
   /**

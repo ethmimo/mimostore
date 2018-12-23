@@ -15,27 +15,28 @@ class MimoStore extends KeyValueStore {
     this.type = MimoStore.type;
   }
 
-  set (data, sig) {
+  set (data, signature) {
     throw new Error('set cannot be called directly');
   }
 
   /*** Add data to a profile
    *
    * @param     {Object}    data       The new data to be added to the profile
-   * @param     {String}    sig        A signature of the data
+   * @param     {String}    signature        A signature of the data
    */
-  put(data, sig) {
+  put(data, signature) {
     if (!data) throw new Error('Data must be included');
-    if (!sig) throw new Error('A signature must be included');
-    const signer = recover(data, sig);
+    if (!data.name) throw new Error('A name must be included');
+    if (!signature) throw new Error('A signature must be included');
+    const signer = recover(data, signature);
     data.id = getID(data.name, signer);
     const profile = this.get(data.id);
     Object.assign(profile, data);
     super.put(data.id, profile);
   }
 
-  del(name, sig) {
-    const signer = recover('delete profile: ${name}', sig);
+  del(name, signature) {
+    const signer = recover('delete profile: ${name}', signature);
     const id = getID(name, signer);
     super.del(id);
   }
@@ -44,7 +45,7 @@ class MimoStore extends KeyValueStore {
    * Check if a profile is registered
    *
    * @param     {Object}    data         The data we signed
-   * @param     {String}    sig          A signature of the data
+   * @param     {String}    signature          A signature of the data
    * @returns   {Boolean}                Was the data signed by the owner?
    */
   isRegistered(name, owner) {
@@ -68,14 +69,14 @@ class MimoStore extends KeyValueStore {
    * Recovers the signer of the data
    *
    * @param     {Object}    data         The data we signed
-   * @param     {String}    sig          A signature of the data
+   * @param     {String}    signature          A signature of the data
    * @returns   {String}                 The Ethereum address that signed the data
    */
-  recover(data, sig) {
+  recover(data, signature) {
     if (data instanceof String) {
-      EthCrypto.recover(sig, EthCrypto.hash.keccak256(data));
+      EthCrypto.recover(signature, EthCrypto.hash.keccak256(data));
     } else {
-      EthCrypto.recover(sig, EthCrypto.hash.keccak256(JSON.stringify(data)));
+      EthCrypto.recover(signature, EthCrypto.hash.keccak256(JSON.stringify(data)));
     }
 
   }

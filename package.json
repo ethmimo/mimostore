@@ -1,6 +1,6 @@
 {
   "name": "mimostore",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Custom identity store for Mimo on OrbitDB",
   "main": "src/MimoStore.js",
   "scripts": {

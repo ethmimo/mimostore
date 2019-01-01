@@ -1,7 +1,7 @@
 # mimo-orbit
 Custom identity store on OrbitDB
 
-An append-only log with traversable history. Add new claims about your identity to your DB. It uses digital signatures to ensure that all data added to the DB has been approved by the owner of the identity.
+An key-value store refactored to accept digital signatures. Add new claims about your identity to the DB. It uses digital signatures to ensure that all data added to the DB has been approved by the owner of the identity.
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@ An append-only log with traversable history. Add new claims about your identity 
 
 ## Install
 ```
-npm install ethmimo-orbit
+npm install mimostore
 ```
 
 ## Usage
@@ -22,47 +22,35 @@ First, create an instance of OrbitDB and Web3:
 ```javascript
 const IPFS = require('ipfs')
 const OrbitDB = require('orbit-db')
-const Web3 = require('web3')
-const MimoStore = require('ethmimo-orbit')
+const MimoStore = require('mimostore')
 
 const ipfs = new IPFS()
-const web3 = new Web3()
 
 // add MimoStore to orbitdb
 OrbitDB.addDatabaseType(MimoStore.type, MimoStore)
 
 // instantiate MimoStore
 const orbitdb = new OrbitDB(ipfs)
-const store = orbitdb.create(ensname, MimoStore.type, {
-  web3: this.web3,
-  write: [*]
-});
+const mimostore = orbitdb.create('mimo', MimoStore.type, {
+  write: ['*']
+})
 ```
 
 Add a claim to it, if the signature of the data is a valid one then the data will be added successfully:
 
 ```javascript
-store.add({ bio: 'I <3 Mimo' }, signature)
-  .then(() => {
-    const items = store.iterator().collect()
-    items.forEach((e) => console.log(e.bio))
-    // "I <3 Mimo"
-  })
+await store.put({ id: '0x_id', bio: 'I <3 Mimo' }, '<signature>')
 ```
 
-Later, when the database contains data, load the history and query when ready:
+Later, when the database contains data, query whenever:
 
 ```javascript
-store.events.on('ready', () => {
-  const items = log.iterator().collect()
-  items.forEach((e) => console.log(e.bio))
-  // "I <3 Mimo"
-})
+await store.get('0x_id')
 ```
 
 ## API
 
-See [orbit-db's API Documenations](https://github.com/haadcode/orbit-db/blob/master/API.md#eventlogname) on eventlogs (the base class for MimoStore) for full details. The only difference between MimoStore and EventStore is its use of signatures for adding data.
+See the commented code in the [codebase](src/MimoStore.js)
 
 ## License
 

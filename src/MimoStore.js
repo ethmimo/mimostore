@@ -19,7 +19,13 @@ class MimoStore extends KeyValueStore {
     throw new Error('set cannot be called directly');
   }
 
-  async del() {
+  /**
+   * Delete an identity from the DB
+   *
+   * @param     {String}      address            The identity to be deleted
+   * @param     {String}      signature          The signature approving the deletion of the identity
+   */
+  async del(address, signature) {
     const id = this.recover(signature, `delete profile: ${address}`);
     if (id != address) throw new Error('The provided Address and generated ID do not match');
     super.del(id);
@@ -27,8 +33,8 @@ class MimoStore extends KeyValueStore {
 
   /*** Add data to a profile
    *
-   * @param     {Object}    data       The new data to be added to the profile
    * @param     {String}    signature        A signature of the data
+   * @param     {Object}    data             The new data to be added to the profile
    */
   async put(signature, data) {
     if (!(data instance of String)) throw new Error('Data must be included and be a string');
@@ -49,10 +55,20 @@ class MimoStore extends KeyValueStore {
 
   }
 
+  /**
+   * Returns all profiles
+   *
+   * @returns   {Array}
+   */
   all() {
     return Object.values(this._index._index);
   }
 
+  /**
+   * Returns all IDs
+   *
+   * @returns   {Array}
+   */
   allIDs() {
     return Object.keys(this._index._index);
   }
@@ -60,8 +76,8 @@ class MimoStore extends KeyValueStore {
   /**
    * Recovers the signer of the data
    *
-   * @param     {String}    data         The data we signed
    * @param     {String}    signature    A signature of the data
+   * @param     {String}    data         The data we signed
    * @returns   {String}                 The Ethereum address that signed the data
    */
   recover(signature, data) {
